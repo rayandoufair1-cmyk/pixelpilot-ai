@@ -57,7 +57,7 @@ export function IntakeForm({ plan, onBack }: IntakeFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, watch, trigger } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { style: "modern", color_palette: "violet-indigo" },
   });
@@ -271,7 +271,16 @@ export function IntakeForm({ plan, onBack }: IntakeFormProps) {
           ) : <div />}
 
           {step < 3 ? (
-            <Button type="button" onClick={() => setStep(step + 1)}>
+            <Button
+              type="button"
+              onClick={async () => {
+                const fields = step === 1
+                  ? ["name", "email"] as const
+                  : ["business_name", "business_type", "description", "target_audience", "style", "color_palette"] as const;
+                const valid = await trigger(fields);
+                if (valid) setStep(step + 1);
+              }}
+            >
               Continue →
             </Button>
           ) : (

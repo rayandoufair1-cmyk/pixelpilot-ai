@@ -53,44 +53,43 @@ export function HowItWorks() {
         </div>
 
         <div className="relative">
-          {/* Connector line */}
-          <div className="hidden lg:block absolute left-1/2 -translate-x-0.5 top-8 bottom-8 w-0.5 bg-gradient-to-b from-violet-200 to-violet-50" />
+          {/* Vertical connector line (desktop only) */}
+          <div className="hidden lg:block absolute left-1/2 -translate-x-px top-8 bottom-8 w-0.5 bg-gradient-to-b from-violet-200 via-violet-300 to-violet-100" />
 
           <div className="space-y-12">
-            {STEPS.map((step, i) => (
-              <div
-                key={step.number}
-                className={`flex flex-col lg:flex-row items-center gap-8 ${
-                  i % 2 === 1 ? "lg:flex-row-reverse" : ""
-                }`}
-              >
-                {/* Content */}
-                <div className="flex-1 lg:text-right">
-                  {i % 2 === 1 && (
-                    <div className="hidden lg:block">
-                      <StepContent step={step} />
-                    </div>
-                  )}
-                  {i % 2 === 0 && <StepContent step={step} />}
-                </div>
+            {STEPS.map((step, i) => {
+              const isEven = i % 2 === 0;
+              return (
+                <div key={step.number} className="flex flex-col lg:flex-row items-center gap-6 lg:gap-0">
+                  {/* Left half */}
+                  <div className="lg:flex-1 lg:pr-12 w-full">
+                    {isEven ? (
+                      <div className="lg:text-right">
+                        <StepContent step={step} />
+                      </div>
+                    ) : (
+                      <div className="hidden lg:block" /> /* spacer */
+                    )}
+                  </div>
 
-                {/* Center node */}
-                <div className="flex-shrink-0 w-16 h-16 bg-violet-600 rounded-full flex items-center justify-center text-2xl shadow-lg shadow-violet-200 relative z-10">
-                  {step.icon}
-                </div>
+                  {/* Center icon node */}
+                  <div className="flex-shrink-0 w-16 h-16 bg-violet-600 rounded-full flex items-center justify-center text-2xl shadow-lg shadow-violet-200 relative z-10">
+                    {step.icon}
+                  </div>
 
-                {/* Content (alternate side) */}
-                <div className="flex-1">
-                  {i % 2 === 1 && (
-                    <div className="lg:hidden">
+                  {/* Right half */}
+                  <div className="lg:flex-1 lg:pl-12 w-full">
+                    {!isEven ? (
                       <StepContent step={step} />
-                    </div>
-                  )}
-                  {i % 2 === 1 && <div className="hidden lg:block"><StepContent step={step} textLeft /></div>}
-                  {i % 2 === 0 && <div className="hidden lg:block" />}
+                    ) : (
+                      <div className="hidden lg:block" /> /* spacer */
+                    )}
+                  </div>
+
+                  {/* Mobile: content below icon for odd steps (already in right half which renders in column) */}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -98,12 +97,12 @@ export function HowItWorks() {
   );
 }
 
-function StepContent({ step, textLeft }: { step: typeof STEPS[0]; textLeft?: boolean }) {
+function StepContent({ step }: { step: (typeof STEPS)[0] }) {
   return (
-    <div className={textLeft ? "text-left" : ""}>
-      <div className="text-violet-400 text-sm font-bold tracking-widest mb-2">STEP {step.number}</div>
+    <div className="max-w-sm">
+      <div className="text-violet-400 text-xs font-bold tracking-widest mb-2">STEP {step.number}</div>
       <h3 className="text-xl font-bold text-slate-900 mb-2">{step.title}</h3>
-      <p className="text-slate-500 leading-relaxed max-w-sm">{step.description}</p>
+      <p className="text-slate-500 leading-relaxed text-sm">{step.description}</p>
     </div>
   );
 }

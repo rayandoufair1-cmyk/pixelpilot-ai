@@ -93,9 +93,10 @@ export async function sendLeadNotificationEmail(
   leadName: string,
   message: string
 ) {
+  const adminTo = process.env.ADMIN_EMAIL || FROM;
   await resend.emails.send({
     from: FROM,
-    to: FROM,
+    to: adminTo,
     subject: `New lead: ${leadName} (${leadEmail})`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">

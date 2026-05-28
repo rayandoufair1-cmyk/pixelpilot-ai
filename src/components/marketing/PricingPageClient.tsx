@@ -7,8 +7,12 @@ import { Check } from "lucide-react";
 import { IntakeForm } from "@/components/marketing/IntakeForm";
 import type { PricingTier } from "@/types";
 
-export function PricingPageClient() {
-  const [selected, setSelected] = useState<PricingTier | null>(null);
+interface PricingPageClientProps {
+  initialPlan?: PricingTier | null;
+}
+
+export function PricingPageClient({ initialPlan }: PricingPageClientProps) {
+  const [selected, setSelected] = useState<PricingTier | null>(initialPlan ?? null);
 
   if (selected) {
     const plan = PRICING_PLANS.find((p) => p.id === selected)!;

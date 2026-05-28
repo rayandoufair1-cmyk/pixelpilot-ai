@@ -27,10 +27,10 @@ export function Footer() {
             {
               title: "Company",
               links: [
-                { href: "/about", label: "About" },
-                { href: "/contact", label: "Contact" },
-                { href: "/blog", label: "Blog" },
-                { href: "/careers", label: "Careers" },
+                { href: "/#services", label: "About Us" },
+                { href: "/#how-it-works", label: "How It Works" },
+                { href: "/#contact", label: "Contact" },
+                { href: "/pricing", label: "Get Started" },
               ],
             },
             {

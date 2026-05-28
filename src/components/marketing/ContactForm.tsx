@@ -10,11 +10,12 @@ export function ContactForm() {
     e.preventDefault();
     setState("loading");
     try {
-      await fetch("/api/contact", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+      if (!res.ok) throw new Error("Server error");
       setState("done");
     } catch {
       setState("error");

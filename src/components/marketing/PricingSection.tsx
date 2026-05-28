@@ -72,7 +72,7 @@ export function PricingSection() {
                 variant={plan.popular ? "secondary" : "primary"}
                 className={`w-full ${plan.popular ? "bg-white text-violet-700 hover:bg-violet-50" : ""}`}
               >
-                <Link href={`/pricing#${plan.id}`}>Get Started →</Link>
+                <Link href={`/pricing?plan=${plan.id}`}>Get Started →</Link>
               </Button>
             </div>
           ))}

@@ -1,6 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // If ADMIN_EMAIL is set, only that email can access admin
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail && user?.email !== adminEmail) {
+    redirect("/portal/dashboard");
+  }
   return (
     <div className="min-h-screen bg-slate-950 flex">
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col fixed h-full">

@@ -32,7 +32,7 @@ export function Navbar() {
             { href: "/#services", label: "Services" },
             { href: "/#how-it-works", label: "How It Works" },
             { href: "/pricing", label: "Pricing" },
-            { href: "/#portfolio", label: "Portfolio" },
+            { href: "/#contact", label: "Contact" },
           ].map(({ href, label }) => (
             <Link
               key={href}
@@ -70,7 +70,7 @@ export function Navbar() {
             { href: "/#services", label: "Services" },
             { href: "/#how-it-works", label: "How It Works" },
             { href: "/pricing", label: "Pricing" },
-            { href: "/#portfolio", label: "Portfolio" },
+            { href: "/#contact", label: "Contact" },
           ].map(({ href, label }) => (
             <Link key={href} href={href} className="text-slate-700 font-medium" onClick={() => setMobileOpen(false)}>
               {label}
