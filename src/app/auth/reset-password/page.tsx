@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -9,7 +9,33 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sessionReady, setSessionReady] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    const code = new URLSearchParams(window.location.search).get("code");
+
+    if (code) {
+      // Email link lands here directly with ?code= — exchange it client-side
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setError("This reset link has expired. Please request a new one.");
+        } else {
+          setSessionReady(true);
+        }
+      });
+    } else {
+      // Might have come via /auth/callback which already set a session cookie
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setSessionReady(true);
+        } else {
+          setError("This reset link has expired. Please request a new one.");
+        }
+      });
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,42 +69,67 @@ export default function ResetPasswordPage() {
           <h1 className="text-xl font-bold text-slate-800 mt-4">Set a new password</h1>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">New password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="At least 8 characters"
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm password</label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-                placeholder="Same password again"
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-              />
-            </div>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{error}</div>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-violet-600 text-white font-semibold rounded-xl py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
+        {/* Expired link state */}
+        {error && !sessionReady && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
+            <div className="text-4xl mb-4">⏰</div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">Link expired</h2>
+            <p className="text-slate-500 text-sm mb-6">{error}</p>
+            <Link
+              href="/auth/reset"
+              className="inline-block bg-violet-600 text-white font-semibold rounded-xl px-6 py-3 text-sm hover:bg-violet-700 transition-colors"
             >
-              {loading ? "Saving..." : "Set New Password →"}
-            </button>
-          </form>
-        </div>
+              Request a new link →
+            </Link>
+          </div>
+        )}
+
+        {/* Loading / verifying state */}
+        {!error && !sessionReady && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
+            <div className="text-slate-400 text-sm">Verifying reset link...</div>
+          </div>
+        )}
+
+        {/* Form — only shown once session is confirmed */}
+        {sessionReady && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">New password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="At least 8 characters"
+                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm password</label>
+                <input
+                  type="password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  required
+                  placeholder="Same password again"
+                  className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{error}</div>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-violet-600 text-white font-semibold rounded-xl py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
+              >
+                {loading ? "Saving..." : "Set New Password →"}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );
