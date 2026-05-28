@@ -10,31 +10,21 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionReady, setSessionReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    // /auth/callback already exchanged the code server-side and set the session cookie.
+    // Just verify the session is present before showing the form.
     const supabase = createClient();
-    const code = new URLSearchParams(window.location.search).get("code");
-
-    if (code) {
-      // Email link lands here directly with ?code= — exchange it client-side
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          setError("This reset link has expired. Please request a new one.");
-        } else {
-          setSessionReady(true);
-        }
-      });
-    } else {
-      // Might have come via /auth/callback which already set a session cookie
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          setSessionReady(true);
-        } else {
-          setError("This reset link has expired. Please request a new one.");
-        }
-      });
-    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+      } else {
+        setError("This reset link has expired. Please request a new one.");
+      }
+      setChecking(false);
+    });
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,12 +59,19 @@ export default function ResetPasswordPage() {
           <h1 className="text-xl font-bold text-slate-800 mt-4">Set a new password</h1>
         </div>
 
-        {/* Expired link state */}
-        {error && !sessionReady && (
+        {/* Checking session */}
+        {checking && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
+            <p className="text-slate-400 text-sm">Verifying reset link…</p>
+          </div>
+        )}
+
+        {/* Expired link */}
+        {!checking && !sessionReady && (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
             <div className="text-4xl mb-4">⏰</div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">Link expired</h2>
-            <p className="text-slate-500 text-sm mb-6">{error}</p>
+            <p className="text-slate-500 text-sm mb-6">This reset link has expired or already been used.</p>
             <Link
               href="/auth/reset"
               className="inline-block bg-violet-600 text-white font-semibold rounded-xl px-6 py-3 text-sm hover:bg-violet-700 transition-colors"
@@ -84,15 +81,8 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Loading / verifying state */}
-        {!error && !sessionReady && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
-            <div className="text-slate-400 text-sm">Verifying reset link...</div>
-          </div>
-        )}
-
-        {/* Form — only shown once session is confirmed */}
-        {sessionReady && (
+        {/* Password form */}
+        {!checking && sessionReady && (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -125,7 +115,7 @@ export default function ResetPasswordPage() {
                 disabled={loading}
                 className="w-full bg-violet-600 text-white font-semibold rounded-xl py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
               >
-                {loading ? "Saving..." : "Set New Password →"}
+                {loading ? "Saving…" : "Set New Password →"}
               </button>
             </form>
           </div>
