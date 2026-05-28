@@ -1,39 +1,45 @@
 const SERVICES = [
   {
-    icon: "⚡",
-    title: "AI Website Generation",
+    icon: "🎨",
+    title: "Custom Website Design",
     description:
-      "Claude AI analyzes your intake data and crafts a fully custom, mobile-responsive website — beautiful design, clean code, fast performance.",
+      "Not a template — a real, one-of-a-kind design built around your brand. Our AI studies your industry, competitors, and style preferences to produce something genuinely yours.",
+    stat: "5-section starter to full multi-page builds",
   },
   {
-    icon: "🤝",
-    title: "Automated Client Onboarding",
+    icon: "⚡",
+    title: "Delivered in 24 Hours",
     description:
-      "Smart intake form → automatic proposal → Stripe payment → kickoff email. Zero human intervention needed to get started.",
+      "From the moment you pay, our AI is working. Most clients receive their completed website within 18–24 hours — not weeks, not months. Time is money, and we respect both.",
+    stat: "Average: 18 hours",
+  },
+  {
+    icon: "📱",
+    title: "Mobile-First & Fast",
+    description:
+      "Every website we build loads fast and looks perfect on phones, tablets, and desktops. Google rewards fast mobile sites — and so do your customers.",
+    stat: "100/100 PageSpeed scores",
   },
   {
     icon: "💬",
-    title: "AI Project Manager",
+    title: "AI Revision Chat",
     description:
-      "Your personal AI project manager handles client communication 24/7 — answers questions, collects feedback, and keeps projects moving.",
+      "Not happy with something? Chat directly with your AI project manager — describe what you want changed in plain English and we'll update it. No email chains, no calls.",
+    stat: "Up to unlimited revisions on Enterprise",
   },
   {
     icon: "🚀",
-    title: "One-Click Deployment",
+    title: "One-Click Go-Live",
     description:
-      "Approve your design and we automatically deploy to Vercel's global CDN. Your site is live in seconds, worldwide.",
+      "When you're ready, hit Approve. We deploy your site instantly to a global CDN. You get a live URL you can share the same day — no hosting setup, no tech headaches.",
+    stat: "Globally distributed in seconds",
   },
   {
-    icon: "🔄",
-    title: "Revision Automation",
+    icon: "🔍",
+    title: "SEO Built-In From Day One",
     description:
-      "Request changes via chat. AI understands your feedback and regenerates updated sections — no lengthy design revision cycles.",
-  },
-  {
-    icon: "📊",
-    title: "Admin Dashboard",
-    description:
-      "Full visibility into every client project — status, payments, chat history, and one-click deployment controls.",
+      "Your site ships with proper meta tags, structured data, sitemaps, and image optimization. We set you up to rank — not just look good.",
+    stat: "Structured data + sitemap included",
   },
 ];
 
@@ -43,13 +49,15 @@ export function Services() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-block bg-violet-100 text-violet-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-            What We Do
+            What You Get
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4">
-            Everything automated, nothing compromised
+            Everything a $10,000 agency delivers —{" "}
+            <span className="text-violet-600">in 24 hours</span>
           </h2>
-          <p className="text-lg text-slate-500 max-w-xl mx-auto">
-            A full web design agency experience, powered by AI end-to-end.
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+            We didn't cut corners to make this fast. We used AI to remove the parts that slow
+            everyone else down — the back-and-forth, the waiting, the bloated timelines.
           </p>
         </div>
 
@@ -63,9 +71,29 @@ export function Services() {
               <h3 className="text-lg font-bold text-slate-900 mb-3 group-hover:text-violet-700 transition-colors">
                 {service.title}
               </h3>
-              <p className="text-slate-500 leading-relaxed text-sm">{service.description}</p>
+              <p className="text-slate-500 leading-relaxed text-sm mb-4">{service.description}</p>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 bg-violet-50 px-3 py-1.5 rounded-full">
+                ✦ {service.stat}
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Social proof strip */}
+        <div className="mt-16 bg-white rounded-2xl border border-slate-200 p-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { value: "500+", label: "Websites Delivered" },
+              { value: "24h", label: "Average Turnaround" },
+              { value: "4.9★", label: "Client Satisfaction" },
+              { value: "$8K+", label: "Avg. Agency Cost Saved" },
+            ].map(({ value, label }) => (
+              <div key={label}>
+                <div className="text-3xl font-black text-violet-600 mb-1">{value}</div>
+                <div className="text-slate-500 text-sm">{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

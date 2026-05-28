@@ -1,38 +1,48 @@
 const STEPS = [
   {
     number: "01",
+    time: "~5 min",
     title: "Tell us about your business",
     description:
-      "Fill out our smart intake form — your industry, style preferences, colors, and what pages you need. Takes 5 minutes.",
+      "Fill out our smart intake form — your industry, target audience, style preferences, and which pages you need. It's conversational, not overwhelming. Takes about 5 minutes.",
     icon: "📝",
+    detail: "No design experience required. If you can describe your business in a sentence, you're ready.",
   },
   {
     number: "02",
-    title: "Choose a plan & pay",
+    time: "~2 min",
+    title: "Choose your plan & pay securely",
     description:
-      "Pick the package that fits your scope. Secure payment via Stripe. Your project starts immediately after checkout.",
+      "Pick the package that fits your scope and budget. Payment is processed securely through Stripe. The moment your payment clears, your project begins — automatically.",
     icon: "💳",
+    detail: "All plans include a 30-day money-back guarantee. No questions asked.",
   },
   {
     number: "03",
-    title: "AI builds your website",
+    time: "Under 24h",
+    title: "AI builds your custom website",
     description:
-      "Our Claude-powered AI generates a fully custom, responsive website tailored to your brand. Usually done in under 24 hours.",
+      "Our AI studies your intake, researches your industry, and generates a fully responsive, custom-coded website. Not a template — a real design built for your brand.",
     icon: "🤖",
+    detail: "You'll get an email the moment your site is ready to preview.",
   },
   {
     number: "04",
-    title: "Review & request revisions",
+    time: "Your pace",
+    title: "Preview and request changes",
     description:
-      "Preview your site in our portal. Chat with our AI project manager to request changes — no email back-and-forth.",
+      "Log into your client portal to review your site. Want something different? Chat with your AI project manager in plain English — 'make the header image bigger' — and it's done.",
     icon: "👀",
+    detail: "Changes typically complete within 1–2 hours of your request.",
   },
   {
     number: "05",
-    title: "Approve & go live",
+    time: "Instant",
+    title: "Approve and go live",
     description:
-      "Click approve and we automatically deploy your site. You get a live URL and a go-live email, instantly.",
+      "When you love it, click Approve. We deploy your site instantly to a global CDN. You receive a live URL and go-live email within minutes. That's it — you're live.",
     icon: "🚀",
+    detail: "Domain connection instructions included if you have an existing domain.",
   },
 ];
 
@@ -45,10 +55,10 @@ export function HowItWorks() {
             The Process
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4">
-            From idea to live site in 5 steps
+            From idea to live in 5 steps
           </h2>
           <p className="text-lg text-slate-500 max-w-xl mx-auto">
-            No meetings, no back-and-forth, no waiting. Just results.
+            No meetings. No design briefs. No waiting on someone else's schedule. Just results.
           </p>
         </div>
 
@@ -68,7 +78,7 @@ export function HowItWorks() {
                         <StepContent step={step} />
                       </div>
                     ) : (
-                      <div className="hidden lg:block" /> /* spacer */
+                      <div className="hidden lg:block" />
                     )}
                   </div>
 
@@ -82,15 +92,31 @@ export function HowItWorks() {
                     {!isEven ? (
                       <StepContent step={step} />
                     ) : (
-                      <div className="hidden lg:block" /> /* spacer */
+                      <div className="hidden lg:block" />
                     )}
                   </div>
-
-                  {/* Mobile: content below icon for odd steps (already in right half which renders in column) */}
                 </div>
               );
             })}
           </div>
+        </div>
+
+        {/* Guarantee banner */}
+        <div className="mt-20 bg-emerald-50 border border-emerald-200 rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+          <div className="text-5xl flex-shrink-0">🛡️</div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">30-Day Money-Back Guarantee</h3>
+            <p className="text-slate-600">
+              Not happy with your website for any reason? Email us within 30 days of delivery and we'll
+              refund you in full — no questions, no forms, no hassle. We stand behind every site we build.
+            </p>
+          </div>
+          <a
+            href="/pricing"
+            className="flex-shrink-0 bg-emerald-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-emerald-700 transition-colors whitespace-nowrap"
+          >
+            Start Risk-Free →
+          </a>
         </div>
       </div>
     </section>
@@ -100,9 +126,15 @@ export function HowItWorks() {
 function StepContent({ step }: { step: (typeof STEPS)[0] }) {
   return (
     <div className="max-w-sm">
-      <div className="text-violet-400 text-xs font-bold tracking-widest mb-2">STEP {step.number}</div>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="text-violet-400 text-xs font-bold tracking-widest">STEP {step.number}</div>
+        <div className="bg-violet-100 text-violet-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+          {step.time}
+        </div>
+      </div>
       <h3 className="text-xl font-bold text-slate-900 mb-2">{step.title}</h3>
-      <p className="text-slate-500 leading-relaxed text-sm">{step.description}</p>
+      <p className="text-slate-500 leading-relaxed text-sm mb-2">{step.description}</p>
+      <p className="text-slate-400 text-xs italic">{step.detail}</p>
     </div>
   );
 }
