@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 
 export default function ResetPasswordPage() {
@@ -14,14 +14,28 @@ export default function ResetPasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // /auth/callback already exchanged the code server-side and set the session cookie.
-    // Just verify the session is present before showing the form.
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
-      } else {
+    const code = new URLSearchParams(window.location.search).get("code");
+
+    if (!code) {
+      setError("This reset link has expired. Please request a new one.");
+      setChecking(false);
+      return;
+    }
+
+    // Create a client with detectSessionInUrl: false so the browser client
+    // does NOT auto-exchange the code on init — we do it manually once below.
+    // Both clients share the same cookie storage, so the session persists.
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { detectSessionInUrl: false } }
+    );
+
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
         setError("This reset link has expired. Please request a new one.");
+      } else {
+        setSessionReady(true);
       }
       setChecking(false);
     });
@@ -39,7 +53,12 @@ export default function ResetPasswordPage() {
     }
     setLoading(true);
     setError("");
-    const supabase = createClient();
+
+    // Regular client — reads session already set in cookies by the exchange above
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       setError(error.message);
@@ -59,19 +78,21 @@ export default function ResetPasswordPage() {
           <h1 className="text-xl font-bold text-slate-800 mt-4">Set a new password</h1>
         </div>
 
-        {/* Checking session */}
+        {/* Verifying */}
         {checking && (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
             <p className="text-slate-400 text-sm">Verifying reset link…</p>
           </div>
         )}
 
-        {/* Expired link */}
+        {/* Expired */}
         {!checking && !sessionReady && (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center">
             <div className="text-4xl mb-4">⏰</div>
             <h2 className="text-lg font-bold text-slate-900 mb-2">Link expired</h2>
-            <p className="text-slate-500 text-sm mb-6">This reset link has expired or already been used.</p>
+            <p className="text-slate-500 text-sm mb-6">
+              This reset link has expired or already been used.
+            </p>
             <Link
               href="/auth/reset"
               className="inline-block bg-violet-600 text-white font-semibold rounded-xl px-6 py-3 text-sm hover:bg-violet-700 transition-colors"
@@ -81,12 +102,14 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Password form */}
+        {/* Form */}
         {!checking && sessionReady && (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">New password</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  New password
+                </label>
                 <input
                   type="password"
                   value={password}
@@ -97,7 +120,9 @@ export default function ResetPasswordPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm password</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Confirm password
+                </label>
                 <input
                   type="password"
                   value={confirm}
@@ -108,7 +133,9 @@ export default function ResetPasswordPage() {
                 />
               </div>
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{error}</div>
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">
+                  {error}
+                </div>
               )}
               <button
                 type="submit"
