@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     }).eq("id", projectId);
 
     // Trigger AI generation via internal API call
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
+    // Use the request URL origin so this works in all environments
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
     fetch(`${appUrl}/api/ai/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

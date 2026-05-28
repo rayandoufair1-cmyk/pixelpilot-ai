@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendGoLiveEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
     const { projectId } = await req.json();
+
+    // Verify user is authenticated
+    const userClient = await createClient();
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = await createAdminClient();
 
     const { data: project } = await supabase
@@ -15,6 +23,12 @@ export async function POST(req: NextRequest) {
 
     if (!project || project.status !== "approved") {
       return NextResponse.json({ error: "Project not ready for deployment" }, { status: 400 });
+    }
+
+    // Verify the project belongs to this user
+    const clientRecord = project.clients as { user_id: string; email: string; name: string };
+    if (clientRecord.user_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await supabase.from("projects").update({ status: "deploying" }).eq("id", projectId);
@@ -50,9 +64,8 @@ export async function POST(req: NextRequest) {
       live_url: liveUrl,
     }).eq("id", projectId);
 
-    const client = project.clients as { email: string; name: string };
-    if (client) {
-      await sendGoLiveEmail(client.email, client.name, liveUrl);
+    if (clientRecord) {
+      await sendGoLiveEmail(clientRecord.email, clientRecord.name, liveUrl);
     }
 
     return NextResponse.json({ success: true, liveUrl });

@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     // Create Stripe checkout session
     const plan = PRICING_PLANS.find((p) => p.id === data.tier)!;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
     const session = await createCheckoutSession(
       plan.priceId,
       data.email,

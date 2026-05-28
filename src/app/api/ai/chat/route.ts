@@ -1,21 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { chatWithClient } from "@/lib/ai/chat";
 
 export async function POST(req: NextRequest) {
   try {
     const { projectId, message } = await req.json();
+
+    // Verify user is authenticated
+    const userClient = await createClient();
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = await createAdminClient();
 
-    // Fetch project
+    // Fetch project and verify ownership
     const { data: project } = await supabase
       .from("projects")
-      .select("*")
+      .select("*, clients!inner(user_id)")
       .eq("id", projectId)
       .single();
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const clientRecord = project.clients as { user_id: string };
+    if (clientRecord.user_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Save user message
