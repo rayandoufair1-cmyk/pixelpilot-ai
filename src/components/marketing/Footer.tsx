@@ -21,7 +21,7 @@ export function Footer() {
                 { href: "/#services", label: "Services" },
                 { href: "/pricing", label: "Pricing" },
                 { href: "/#how-it-works", label: "How It Works" },
-                { href: "/#portfolio", label: "Portfolio" },
+                { href: "/#contact", label: "Contact" },
               ],
             },
             {
