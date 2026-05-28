@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const clientRecord = project.clients as { user_id: string };
+    const clientRecord = project.clients as unknown as { user_id: string };
     if (clientRecord.user_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

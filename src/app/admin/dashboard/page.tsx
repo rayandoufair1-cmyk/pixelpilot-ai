@@ -82,12 +82,14 @@ export default async function AdminDashboard() {
                     {STATUS_LABELS[project.status]}
                   </span>
                   {project.status === "review" && (
-                    <Link
-                      href={`/admin/projects/${project.id}`}
+                    <a
+                      href={`/api/preview/${project.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-xs bg-violet-600 text-white px-2 py-0.5 rounded-full hover:bg-violet-500 transition-colors"
                     >
-                      Deploy →
-                    </Link>
+                      Preview →
+                    </a>
                   )}
                 </div>
               </div>

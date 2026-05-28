@@ -29,11 +29,12 @@ export async function POST(req: NextRequest) {
     const html = await generateWebsite(project.intake_data);
 
     // Store generated code and move to review
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
     const previewPath = `/api/preview/${projectId}`;
     await supabase.from("projects").update({
       generated_code: html,
       status: "review",
-      preview_url: `${process.env.NEXT_PUBLIC_APP_URL}${previewPath}`,
+      preview_url: `${appUrl}${previewPath}`,
     }).eq("id", projectId);
 
     // Notify client
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
         client.email,
         client.name,
         projectId,
-        `${process.env.NEXT_PUBLIC_APP_URL}/portal/project/${projectId}`
+        `${appUrl}/portal/project/${projectId}`
       );
     }
 

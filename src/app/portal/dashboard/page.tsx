@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
@@ -19,16 +19,35 @@ export default async function DashboardPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: client } = await supabase
+  let { data: client } = await supabase
     .from("clients")
     .select("*")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
+
+  // Fallback: link client record by email (covers password sign-in path)
+  if (!client && user.email) {
+    const adminSupabase = await createAdminClient();
+    const { data: unlinked } = await adminSupabase
+      .from("clients")
+      .select("*")
+      .eq("email", user.email)
+      .is("user_id", null)
+      .maybeSingle();
+
+    if (unlinked) {
+      await adminSupabase
+        .from("clients")
+        .update({ user_id: user.id })
+        .eq("id", unlinked.id);
+      client = { ...unlinked, user_id: user.id };
+    }
+  }
 
   const { data: projects } = await supabase
     .from("projects")
     .select("*")
-    .eq("client_id", client?.id)
+    .eq("client_id", client?.id ?? "")
     .order("created_at", { ascending: false });
 
   return (
