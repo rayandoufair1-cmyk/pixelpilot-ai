@@ -14,6 +14,8 @@ export interface Client {
   name: string;
   company?: string;
   phone?: string;
+  user_id?: string;
+  stripe_customer_id?: string;
   created_at: string;
 }
 
