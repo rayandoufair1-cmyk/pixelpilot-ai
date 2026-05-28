@@ -14,31 +14,40 @@ export default function ResetPasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("code");
-
-    if (!code) {
-      setError("This reset link has expired. Please request a new one.");
-      setChecking(false);
-      return;
-    }
-
-    // Create a client with detectSessionInUrl: false so the browser client
-    // does NOT auto-exchange the code on init — we do it manually once below.
-    // Both clients share the same cookie storage, so the session persists.
+    // With implicit flow the email link carries #access_token=xxx&type=recovery
+    // in the URL hash.  createBrowserClient detects the hash automatically and
+    // fires onAuthStateChange with event "PASSWORD_RECOVERY" — no manual
+    // exchangeCodeForSession call is needed (and there is no ?code= param).
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { detectSessionInUrl: false } }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        setError("This reset link has expired. Please request a new one.");
-      } else {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
         setSessionReady(true);
+        setChecking(false);
       }
-      setChecking(false);
     });
+
+    // If the hash was already consumed before the listener registered,
+    // getSession() will still return the active session.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+        setChecking(false);
+      } else {
+        // Give the listener a short window to fire before declaring expired.
+        const timer = setTimeout(() => {
+          setChecking(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,7 +63,6 @@ export default function ResetPasswordPage() {
     setLoading(true);
     setError("");
 
-    // Regular client — reads session already set in cookies by the exchange above
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

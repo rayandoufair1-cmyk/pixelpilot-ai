@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 
 export default function ResetPage() {
@@ -13,10 +13,20 @@ export default function ResetPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const supabase = createClient();
+
+    // Use implicit flow so no PKCE code-verifier is generated.
+    // The email link will contain the access_token directly in the URL hash —
+    // no verifier stored in the browser, no cross-tab mismatch.
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { flowType: "implicit" } }
+    );
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     });
+
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -68,7 +78,7 @@ export default function ResetPage() {
                 disabled={loading}
                 className="w-full bg-violet-600 text-white font-semibold rounded-xl py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
               >
-                {loading ? "Sending..." : "Send Reset Link →"}
+                {loading ? "Sending…" : "Send Reset Link →"}
               </button>
             </form>
             <p className="text-center mt-4">
