@@ -3,8 +3,6 @@ import { useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter } from "next/navigation";
 
-export const metadata = undefined; // client component — metadata set in layout
-
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createBrowserClient(
