@@ -61,11 +61,18 @@ export async function POST(req: NextRequest) {
   // ─── Subscription updated (renewals, plan changes, payment failures) ─────────
   if (event.type === "customer.subscription.updated") {
     const sub = event.data.object as Stripe.Subscription;
+    // current_period_end exists at runtime but the TypeScript types for this
+    // Stripe API version may not expose it — access safely via index signature
+    const rawSub = sub as unknown as Record<string, unknown>;
+    const periodEnd = typeof rawSub.current_period_end === "number"
+      ? new Date(rawSub.current_period_end * 1000).toISOString()
+      : undefined;
+
     await supabase
       .from("clients")
       .update({
         subscription_status: sub.status as string,
-        subscription_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+        ...(periodEnd && { subscription_period_end: periodEnd }),
       })
       .eq("subscription_id", sub.id);
   }
@@ -79,13 +86,12 @@ export async function POST(req: NextRequest) {
       .eq("subscription_id", sub.id);
   }
 
-  // ─── Invoice paid — keep period_end in sync ──────────────────────────────────
+  // ─── Invoice paid — keep status in sync ─────────────────────────────────────
   if (event.type === "invoice.paid") {
-    const invoice = event.data.object as Stripe.Invoice;
-    const subId =
-      typeof invoice.subscription === "string"
-        ? invoice.subscription
-        : (invoice.subscription as Stripe.Subscription | null)?.id ?? null;
+    // The `dahlia` API version restructured Invoice — access subscription safely
+    const rawInvoice = event.data.object as unknown as Record<string, unknown>;
+    const sub = rawInvoice.subscription;
+    const subId = typeof sub === "string" ? sub : (sub as Record<string, unknown> | null)?.id as string | null ?? null;
 
     if (subId) {
       await supabase
@@ -97,11 +103,9 @@ export async function POST(req: NextRequest) {
 
   // ─── Payment failed ──────────────────────────────────────────────────────────
   if (event.type === "invoice.payment_failed") {
-    const invoice = event.data.object as Stripe.Invoice;
-    const subId =
-      typeof invoice.subscription === "string"
-        ? invoice.subscription
-        : (invoice.subscription as Stripe.Subscription | null)?.id ?? null;
+    const rawInvoice = event.data.object as unknown as Record<string, unknown>;
+    const sub = rawInvoice.subscription;
+    const subId = typeof sub === "string" ? sub : (sub as Record<string, unknown> | null)?.id as string | null ?? null;
 
     if (subId) {
       await supabase
