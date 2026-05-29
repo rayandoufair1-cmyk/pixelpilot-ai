@@ -68,7 +68,7 @@ export default async function DashboardPage({
           <p className="text-slate-500 text-sm mt-1">Track your website builds from intake to live</p>
         </div>
         <Button asChild size="sm">
-          <Link href="/pricing">+ New Project</Link>
+          <Link href="/portal/new-project">+ New Project</Link>
         </Button>
       </div>
 
@@ -78,7 +78,7 @@ export default async function DashboardPage({
           <h2 className="text-xl font-bold text-slate-800 mb-2">No projects yet</h2>
           <p className="text-slate-500 mb-6">Start your first AI-powered website project today.</p>
           <Button asChild>
-            <Link href="/pricing">Get Started →</Link>
+            <Link href="/portal/new-project">Get Started →</Link>
           </Button>
         </div>
       ) : (

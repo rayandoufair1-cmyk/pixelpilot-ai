@@ -48,9 +48,11 @@ const PALETTES = [
 interface IntakeFormProps {
   plan: PricingPlan;
   onBack: () => void;
+  prefillName?: string;
+  prefillEmail?: string;
 }
 
-export function IntakeForm({ plan, onBack }: IntakeFormProps) {
+export function IntakeForm({ plan, onBack, prefillName, prefillEmail }: IntakeFormProps) {
   const [step, setStep] = useState(1);
   const [selectedPages, setSelectedPages] = useState<string[]>(["Home", "About", "Services", "Contact"]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(["Contact Form"]);
@@ -59,7 +61,12 @@ export function IntakeForm({ plan, onBack }: IntakeFormProps) {
 
   const { register, handleSubmit, formState: { errors }, watch, trigger } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { style: "modern", color_palette: "violet-indigo" },
+    defaultValues: {
+      style: "modern",
+      color_palette: "violet-indigo",
+      name: prefillName ?? "",
+      email: prefillEmail ?? "",
+    },
   });
 
   function toggleItem(arr: string[], setArr: (v: string[]) => void, item: string) {
