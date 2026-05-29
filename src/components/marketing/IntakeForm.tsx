@@ -94,10 +94,14 @@ export function IntakeForm({ plan, onBack }: IntakeFormProps) {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Something went wrong");
-      if (json.checkoutUrl) window.location.href = json.checkoutUrl;
+      if (!res.ok) throw new Error(json.error || "Something went wrong. Please try again.");
+      if (json.checkoutUrl) {
+        window.location.href = json.checkoutUrl;
+      } else {
+        throw new Error("No checkout URL returned. Please try again.");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setSubmitting(false);
     }
   }
@@ -255,7 +259,14 @@ export function IntakeForm({ plan, onBack }: IntakeFormProps) {
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
-                  {error}
+                  <p className="font-semibold mb-1">Something went wrong</p>
+                  <p>{error}</p>
+                  <p className="mt-2 text-red-600">
+                    Need help?{" "}
+                    <a href="mailto:hello@pixelpilot.ai" className="underline font-medium">
+                      Email us at hello@pixelpilot.ai
+                    </a>
+                  </p>
                 </div>
               )}
             </>
@@ -285,7 +296,7 @@ export function IntakeForm({ plan, onBack }: IntakeFormProps) {
             </Button>
           ) : (
             <Button type="submit" loading={submitting}>
-              Pay {formatCurrency(plan.price)} & Start →
+              {submitting ? "Redirecting to payment…" : `Pay ${formatCurrency(plan.price)} & Start →`}
             </Button>
           )}
         </div>

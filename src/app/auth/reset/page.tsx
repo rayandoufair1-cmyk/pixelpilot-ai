@@ -48,24 +48,39 @@ export default function ResetPage() {
         {sent ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
             <div className="text-4xl mb-4">📬</div>
-            <h2 className="text-lg font-bold text-slate-900 mb-2">Check your email</h2>
-            <p className="text-slate-500 text-sm mb-6">
-              We sent a password reset link to <strong>{email}</strong>.
+            <h2 className="text-lg font-bold text-slate-900 mb-2">Check your inbox</h2>
+            <p className="text-slate-500 text-sm mb-1">
+              We sent a reset link to <strong>{email}</strong>.
             </p>
-            <Link href="/auth/login" className="text-violet-600 hover:underline text-sm font-medium">
-              ← Back to sign in
-            </Link>
+            <p className="text-slate-400 text-xs mb-6">
+              Don't see it? Check your spam folder. The link expires in 1 hour.
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => { setSent(false); setError(""); }}
+                className="block w-full text-center text-violet-600 hover:underline text-sm font-medium"
+              >
+                Send again
+              </button>
+              <Link href="/auth/login" className="block text-center text-slate-400 hover:text-slate-600 text-sm transition-colors">
+                ← Back to sign in
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+            <p className="text-slate-500 text-sm mb-6">
+              Enter your email and we'll send you a link to reset your password.
+            </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Your email</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoFocus
                   placeholder="you@company.com"
                   className="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
@@ -76,9 +91,11 @@ export default function ResetPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-violet-600 text-white font-semibold rounded-xl py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
+                className="w-full bg-violet-600 text-white font-semibold rounded-xl py-3 text-sm hover:bg-violet-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? "Sending…" : "Send Reset Link →"}
+                {loading ? (
+                  <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending…</>
+                ) : "Send Reset Link →"}
               </button>
             </form>
             <p className="text-center mt-4">
