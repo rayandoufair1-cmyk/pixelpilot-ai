@@ -26,7 +26,15 @@ export async function proxy(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+      // Preserve the full original URL so login can redirect back to it.
+      // This is critical for the post-payment flow:
+      //   Stripe → /portal/dashboard?payment=success&project=xxx
+      //   → not logged in → /auth/login?next=/portal/dashboard?payment=success&project=xxx
+      //   → after login → /portal/dashboard?payment=success&project=xxx  ✓
+      const next = req.nextUrl.pathname + req.nextUrl.search;
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("next", next);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

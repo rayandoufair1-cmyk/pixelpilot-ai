@@ -53,7 +53,12 @@ export function LoginForm() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push("/portal/dashboard");
+        // After login, redirect to the `next` param if present (e.g. post-payment flow)
+        // Only allow relative URLs to prevent open redirect attacks
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get("next");
+        const destination = next && next.startsWith("/") ? next : "/portal/dashboard";
+        router.push(destination);
         router.refresh();
       }
     } catch (err) {
