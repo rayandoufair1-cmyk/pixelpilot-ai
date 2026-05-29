@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { createCheckoutSession } from "@/lib/stripe";
+import { createSubscriptionCheckout } from "@/lib/stripe";
 import { sendWelcomeEmail } from "@/lib/email";
-import { PRICING_PLANS } from "@/lib/pricing";
+import { SUBSCRIPTION_PLAN } from "@/lib/pricing";
 import { z } from "zod";
 
 const onboardingSchema = z.object({
@@ -10,8 +10,8 @@ const onboardingSchema = z.object({
   email: z.string().email(),
   company: z.string().optional(),
   phone: z.string().optional(),
-  tier: z.enum(["starter", "pro", "enterprise"]),
   intake: z.object({
+    project_type: z.string().min(1),
     business_name: z.string().min(1),
     business_type: z.string().min(1),
     description: z.string().min(10),
@@ -25,8 +25,7 @@ const onboardingSchema = z.object({
   }),
 });
 
-// Placeholder IDs that ship as defaults — not real Stripe price IDs
-const PLACEHOLDER_PRICE_IDS = new Set(["price_starter", "price_pro", "price_enterprise", ""]);
+const PLACEHOLDER_PRICE_IDS = new Set(["", "price_starter", "price_pro", "price_enterprise"]);
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,29 +33,19 @@ export async function POST(req: NextRequest) {
     const data = onboardingSchema.parse(body);
     const supabase = await createAdminClient();
 
-    // Find the plan
-    const plan = PRICING_PLANS.find((p) => p.id === data.tier);
-    if (!plan) {
-      return NextResponse.json({ error: "Invalid plan selected" }, { status: 400 });
-    }
-
-    // Validate that Stripe price IDs are configured
-    if (!plan.priceId || PLACEHOLDER_PRICE_IDS.has(plan.priceId)) {
-      console.error(`[onboarding] Stripe price ID not configured for plan: ${data.tier}. Got: "${plan.priceId}"`);
+    // Validate Stripe keys
+    if (!process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json(
-        {
-          error:
-            "Our payment system is being set up — please contact us at hello@pixelpilot.ai to place your order.",
-        },
+        { error: "Payment system not configured. Please contact hello@pixelpilot.ai." },
         { status: 503 }
       );
     }
 
-    // Validate Stripe secret key is set
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error("[onboarding] STRIPE_SECRET_KEY not set");
+    const priceId = SUBSCRIPTION_PLAN.priceId;
+    if (!priceId || PLACEHOLDER_PRICE_IDS.has(priceId)) {
+      console.error("[onboarding] Stripe price ID not configured. Set NEXT_PUBLIC_STRIPE_PRICE_ID.");
       return NextResponse.json(
-        { error: "Payment system not configured. Please contact hello@pixelpilot.ai." },
+        { error: "Our payment system is being set up — please contact hello@pixelpilot.ai." },
         { status: 503 }
       );
     }
@@ -73,14 +62,20 @@ export async function POST(req: NextRequest) {
 
     if (clientError) throw clientError;
 
-    // Create project
+    // Create project (intake status — AI runs after payment confirmed by webhook)
+    const projectName =
+      `${data.intake.business_name} ` +
+      ({ website: "Website", landing: "Landing Page", ecommerce: "Online Store",
+         blog: "Blog", portfolio: "Portfolio", saas: "SaaS Page" }[data.intake.project_type] ?? "Website");
+
     const { data: project, error: projectError } = await supabase
       .from("projects")
       .insert({
         client_id: client.id,
-        name: `${data.intake.business_name} Website`,
+        name: projectName,
         status: "intake",
-        tier: data.tier,
+        project_type: data.intake.project_type,
+        tier: "subscription",
         intake_data: data.intake,
       })
       .select()
@@ -94,17 +89,17 @@ export async function POST(req: NextRequest) {
       .insert({ name: data.name, email: data.email, company: data.company })
       .then(undefined, (e) => console.error("[onboarding] lead insert failed:", e));
 
-    // Create Stripe checkout session
+    // Create Stripe subscription checkout
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
-    const session = await createCheckoutSession(
-      plan.priceId,
+    const session = await createSubscriptionCheckout(
+      priceId,
       data.email,
       project.id,
       `${appUrl}/portal/dashboard?payment=success&project=${project.id}`,
       `${appUrl}/pricing?cancelled=true`
     );
 
-    // Send welcome email (non-blocking — never fails the response)
+    // Send welcome email (non-blocking)
     sendWelcomeEmail(data.email, data.name, project.id).catch((e) =>
       console.error("[onboarding] welcome email failed:", e)
     );
@@ -118,13 +113,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    // Stripe errors have a message property
     if (error instanceof Error && error.message.includes("No such price")) {
       return NextResponse.json(
-        {
-          error:
-            "Payment configuration error. Please contact hello@pixelpilot.ai to complete your order.",
-        },
+        { error: "Payment configuration error. Please contact hello@pixelpilot.ai." },
         { status: 503 }
       );
     }

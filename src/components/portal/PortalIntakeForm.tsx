@@ -1,15 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email required"),
-  company: z.string().optional(),
-  phone: z.string().optional(),
   business_name: z.string().min(1, "Business name is required"),
   business_type: z.string().min(1, "Business type is required"),
   description: z.string().min(20, "Please describe your business (min 20 chars)"),
@@ -35,6 +32,7 @@ const FEATURES = [
   "Contact Form", "Live Chat", "Newsletter Signup", "Booking System",
   "E-commerce Store", "Client Portal", "Photo Gallery", "Video Background",
   "Testimonials", "FAQ Section", "Social Media Feed", "Google Maps",
+  "Dark Mode", "Multilingual", "Analytics", "Blog & CMS",
 ];
 const STYLES = [
   { value: "modern", label: "Modern", desc: "Clean lines, bold typography" },
@@ -52,13 +50,13 @@ const PALETTES = [
   { value: "slate-gray", label: "Slate & Gray", colors: ["#475569", "#6b7280"] },
 ];
 
-interface IntakeFormProps {
-  onBack: () => void;
+interface PortalIntakeFormProps {
   prefillName?: string;
   prefillEmail?: string;
 }
 
-export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProps) {
+export function PortalIntakeForm({ prefillName, prefillEmail }: PortalIntakeFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [projectType, setProjectType] = useState<string>("website");
   const [selectedPages, setSelectedPages] = useState<string[]>(["Home", "About", "Services", "Contact"]);
@@ -68,12 +66,7 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
 
   const { register, handleSubmit, formState: { errors }, watch, trigger } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      style: "modern",
-      color_palette: "violet-indigo",
-      name: prefillName ?? "",
-      email: prefillEmail ?? "",
-    },
+    defaultValues: { style: "modern", color_palette: "violet-indigo" },
   });
 
   function toggleItem(arr: string[], setArr: (v: string[]) => void, item: string) {
@@ -84,14 +77,10 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
     setSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/onboarding", {
+      const res = await fetch("/api/project/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          company: data.company,
-          phone: data.phone,
           intake: {
             project_type: projectType,
             business_name: data.business_name,
@@ -108,94 +97,63 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Something went wrong. Please try again.");
-      if (json.checkoutUrl) {
-        window.location.href = json.checkoutUrl;
-      } else {
-        throw new Error("No checkout URL returned. Please try again.");
-      }
+      if (!res.ok) throw new Error(json.error || "Something went wrong.");
+      router.push(`/portal/dashboard?project=${json.projectId}&created=true`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setSubmitting(false);
     }
   }
 
-  const STEP_LABELS = ["Your info", "Brand details", "Pages & features"];
+  const STEP_LABELS = ["Project type", "Brand details", "Pages & features"];
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={onBack} className="text-slate-400 hover:text-slate-700 transition-colors text-sm font-medium">
-          ← Back
-        </button>
-        <div className="flex-1 h-px bg-slate-200" />
-        <div className="bg-emerald-100 text-emerald-700 text-sm font-semibold px-3 py-1 rounded-full">
-          $20/month — Unlimited Projects
-        </div>
-      </div>
-
-      {/* Project type picker */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-6">
-        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">What are you building?</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {PROJECT_TYPES.map(({ value, label, icon, desc }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setProjectType(value)}
-              className={`text-left p-3 rounded-xl border-2 transition-all ${
-                projectType === value
-                  ? "border-violet-600 bg-violet-50"
-                  : "border-slate-200 hover:border-slate-300 bg-white"
-              }`}
-            >
-              <div className="text-xl mb-1">{icon}</div>
-              <div className="text-sm font-semibold text-slate-800">{label}</div>
-              <div className="text-xs text-slate-400">{desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <div>
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-6">
         {[1, 2, 3].map((s) => (
           <div key={s} className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-              s <= step ? "bg-violet-600 text-white" : "bg-slate-200 text-slate-400"
-            }`}>{s}</div>
+              s < step ? "bg-violet-600 text-white" : s === step ? "bg-violet-600 text-white ring-4 ring-violet-100" : "bg-slate-200 text-slate-400"
+            }`}>
+              {s < step ? "✓" : s}
+            </div>
             {s < 3 && <div className={`flex-1 h-0.5 w-12 ${s < step ? "bg-violet-600" : "bg-slate-200"}`} />}
           </div>
         ))}
-        <span className="ml-3 text-sm text-slate-500">{STEP_LABELS[step - 1]}</span>
+        <span className="ml-3 text-sm text-slate-500 font-medium">{STEP_LABELS[step - 1]}</span>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6">
 
-          {/* Step 1: Contact info */}
+          {/* Step 1: Project type */}
           {step === 1 && (
             <>
-              <h2 className="text-xl font-bold text-slate-900">Your contact information</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Full Name *" error={errors.name?.message}>
-                  <input {...register("name")} placeholder="Jane Smith" className={inputCls(!!errors.name)} />
-                </Field>
-                <Field label="Email *" error={errors.email?.message}>
-                  <input {...register("email")} type="email" placeholder="jane@company.com" className={inputCls(!!errors.email)} />
-                </Field>
-                <Field label="Company">
-                  <input {...register("company")} placeholder="Acme Inc." className={inputCls(false)} />
-                </Field>
-                <Field label="Phone">
-                  <input {...register("phone")} placeholder="+1 (555) 000-0000" className={inputCls(false)} />
-                </Field>
+              <h2 className="text-xl font-bold text-slate-900">What are you building?</h2>
+              <p className="text-slate-500 text-sm -mt-2">Your subscription includes all project types — pick whatever you need.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {PROJECT_TYPES.map(({ value, label, icon, desc }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setProjectType(value)}
+                    className={`text-left p-4 rounded-xl border-2 transition-all ${
+                      projectType === value
+                        ? "border-violet-600 bg-violet-50"
+                        : "border-slate-200 hover:border-slate-300 bg-white"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{icon}</div>
+                    <div className="text-sm font-bold text-slate-800">{label}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{desc}</div>
+                  </button>
+                ))}
               </div>
             </>
           )}
 
-          {/* Step 2: Brand */}
+          {/* Step 2: Brand details */}
           {step === 2 && (
             <>
               <h2 className="text-xl font-bold text-slate-900">Tell us about your brand</h2>
@@ -209,15 +167,15 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
                   </Field>
                 </div>
                 <Field label="Describe your business *" error={errors.description?.message}>
-                  <textarea {...register("description")} rows={3} placeholder="We're a family-owned Italian restaurant serving authentic Neapolitan pizza in downtown Chicago..." className={`${inputCls(!!errors.description)} resize-none`} />
+                  <textarea {...register("description")} rows={3} placeholder="We're a family-owned Italian restaurant serving authentic Neapolitan pizza..." className={`${inputCls(!!errors.description)} resize-none`} />
                 </Field>
-                <Field label="Who is your target audience? *" error={errors.target_audience?.message}>
+                <Field label="Target audience *" error={errors.target_audience?.message}>
                   <input {...register("target_audience")} placeholder="Young professionals, families, local residents..." className={inputCls(!!errors.target_audience)} />
                 </Field>
-                <Field label="Any competitors to outshine? (optional)">
+                <Field label="Competitors to outshine (optional)">
                   <input {...register("competitors")} placeholder="Website URLs of competitors..." className={inputCls(false)} />
                 </Field>
-                <Field label="Website Style *">
+                <Field label="Design style *">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {STYLES.map(({ value, label, desc }) => {
                       const current = watch("style");
@@ -231,7 +189,7 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
                     })}
                   </div>
                 </Field>
-                <Field label="Color Palette *">
+                <Field label="Color palette *">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {PALETTES.map(({ value, label, colors }) => {
                       const current = watch("color_palette");
@@ -294,13 +252,11 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
-                  <p className="font-semibold mb-1">Something went wrong</p>
+                  <p className="font-semibold mb-1">Error</p>
                   <p>{error}</p>
                   <p className="mt-2 text-red-600">
                     Need help?{" "}
-                    <a href="mailto:hello@pixelpilot.ai" className="underline font-medium">
-                      Email us at hello@pixelpilot.ai
-                    </a>
+                    <a href="mailto:hello@pixelpilot.ai" className="underline font-medium">hello@pixelpilot.ai</a>
                   </p>
                 </div>
               )}
@@ -320,18 +276,17 @@ export function IntakeForm({ onBack, prefillName, prefillEmail }: IntakeFormProp
             <Button
               type="button"
               onClick={async () => {
-                const fields = step === 1
-                  ? ["name", "email"] as const
-                  : ["business_name", "business_type", "description", "target_audience", "style", "color_palette"] as const;
+                if (step === 1) { setStep(2); return; }
+                const fields = ["business_name", "business_type", "description", "target_audience", "style", "color_palette"] as const;
                 const valid = await trigger(fields);
-                if (valid) setStep(step + 1);
+                if (valid) setStep(3);
               }}
             >
               Continue →
             </Button>
           ) : (
             <Button type="submit" loading={submitting}>
-              {submitting ? "Redirecting to payment…" : "Subscribe & Build My Site →"}
+              {submitting ? "Launching AI…" : "Build My Project →"}
             </Button>
           )}
         </div>

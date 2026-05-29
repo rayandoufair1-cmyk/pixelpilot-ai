@@ -2,34 +2,33 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { PRICING_PLANS } from "@/lib/pricing";
-import { formatCurrency } from "@/lib/utils";
 import { Check, ChevronDown } from "lucide-react";
+import { SUBSCRIPTION_PLAN } from "@/lib/pricing";
 
 const FAQS = [
   {
-    q: "How is this different from a website builder like Wix or Squarespace?",
-    a: "Website builders give you a generic template and leave you to figure everything out yourself. We give you a fully custom-built website — unique to your brand — with zero design or tech work on your end. You fill out a form and we deliver a finished site.",
+    q: "What does $20/month actually include?",
+    a: "Everything. You get unlimited AI-powered projects — websites, landing pages, online stores, blogs, portfolios. No caps, no per-project fees. One flat $20/month and you can build as much as you want.",
   },
   {
-    q: "What exactly do I get? Is the site mine to keep?",
-    a: "Yes, 100%. You own the code and can move it anywhere you like. We'll provide a live URL and full source code. You're never locked in to any subscription or platform.",
+    q: "Do I own the websites that are built?",
+    a: "Yes, 100%. You own all the code and can host it anywhere — we'll provide a live URL and the full source. You're never locked into our platform.",
   },
   {
-    q: "What if I don't like the design?",
-    a: "That's what revisions are for. Every plan includes at least one round of revisions — Enterprise includes unlimited. Just describe what you want changed in the chat and we'll update it, usually within 1–2 hours.",
+    q: "How does the AI build my site?",
+    a: "You fill out a short intake form: your business name, audience, style preferences, and which pages you need. Our AI then generates the design, writes the copy, and deploys a live preview — usually within 24 hours.",
   },
   {
-    q: "Do I need a domain name already?",
-    a: "No. We'll deploy to a free subdomain first so you can review everything. When you're ready to use your own domain, we'll send you step-by-step connection instructions. It takes about 10 minutes.",
+    q: "Can I request revisions?",
+    a: "Yes — unlimited revisions are included. Just chat with us in your project dashboard and we'll update it, usually within a few hours.",
   },
   {
-    q: "What about hosting? Do I pay monthly for that?",
-    a: "We deploy to Vercel's global CDN which has a free tier that covers most small business websites. You won't pay monthly hosting on us — we'll guide you through connecting your own free Vercel account.",
+    q: "What if I need a domain name?",
+    a: "We deploy to a free preview URL first. When you're ready to go live on your own domain, we send step-by-step connection instructions. Takes about 10 minutes.",
   },
   {
-    q: "What's your refund policy?",
-    a: "If you're not satisfied with your delivered website for any reason, email us within 30 days and we'll refund you in full. No questions asked. We've never needed to give one — but the guarantee is real.",
+    q: "Can I cancel anytime?",
+    a: "Absolutely. Cancel from your billing dashboard with one click. No cancellation fees, no questions. Your existing projects stay accessible until the end of your billing period.",
   },
 ];
 
@@ -42,9 +41,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         onClick={() => setOpen(!open)}
       >
         <span className="font-semibold text-slate-900 text-sm pr-4">{q}</span>
-        <ChevronDown
-          className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-        />
+        <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="px-6 pb-5 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-4">
@@ -56,123 +53,90 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export function PricingSection() {
+  const plan = SUBSCRIPTION_PLAN;
+
   return (
     <section id="pricing" className="py-24 bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <div className="inline-block bg-violet-100 text-violet-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-            Pricing
+            Simple Pricing
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4">
-            Simple, transparent pricing
+            One plan. Unlimited projects.
           </h2>
           <p className="text-lg text-slate-500 max-w-xl mx-auto">
-            One-time payment. No subscriptions, no hidden fees. Just a great website.
+            $20/month. Build websites, stores, landing pages, blogs — as many as you want. Cancel anytime.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mb-12">
-          {PRICING_PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative rounded-2xl p-8 ${
-                plan.popular
-                  ? "bg-violet-600 text-white shadow-2xl shadow-violet-200 scale-105"
-                  : "bg-white border border-slate-200"
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap">
-                  ⭐ MOST POPULAR
-                </div>
-              )}
-
-              <div
-                className={`text-xs font-bold uppercase tracking-widest mb-2 ${
-                  plan.popular ? "text-violet-200" : "text-violet-600"
-                }`}
-              >
-                {plan.name}
-              </div>
-
-              <div className="mb-1">
-                <span
-                  className={`text-4xl font-black ${plan.popular ? "text-white" : "text-slate-900"}`}
-                >
-                  {formatCurrency(plan.price)}
-                </span>
-                <span className={`text-sm ml-1 ${plan.popular ? "text-violet-200" : "text-slate-400"}`}>
-                  one-time
-                </span>
-              </div>
-
-              <div className={`text-xs mb-2 ${plan.popular ? "text-violet-300" : "text-emerald-600 font-semibold"}`}>
-                {plan.popular
-                  ? "vs $8,000+ for an agency"
-                  : plan.id === "starter"
-                  ? "Save $7,000+ vs agency"
-                  : "Save $19,000+ vs agency"}
-              </div>
-
-              <p className={`text-sm mb-8 ${plan.popular ? "text-violet-200" : "text-slate-500"}`}>
-                {plan.description}
-              </p>
-
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <Check
-                      className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                        plan.popular ? "text-violet-200" : "text-violet-600"
-                      }`}
-                    />
-                    <span
-                      className={`text-sm ${plan.popular ? "text-violet-100" : "text-slate-600"}`}
-                    >
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                asChild
-                variant={plan.popular ? "secondary" : "primary"}
-                className={`w-full ${plan.popular ? "bg-white text-violet-700 hover:bg-violet-50" : ""}`}
-              >
-                <Link href={`/pricing?plan=${plan.id}`}>Get Started →</Link>
-              </Button>
+        {/* Plan card */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="relative bg-violet-600 rounded-3xl p-10 text-white shadow-2xl shadow-violet-200">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-5 py-1.5 rounded-full whitespace-nowrap">
+              ✦ UNLIMITED PROJECTS INCLUDED
             </div>
-          ))}
+
+            <div className="text-center mb-8">
+              <div className="flex items-end justify-center gap-2 mb-2">
+                <span className="text-6xl font-black">$20</span>
+                <span className="text-violet-200 text-lg mb-2">/month</span>
+              </div>
+              <p className="text-violet-200">Everything included. Cancel anytime.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+              {plan.features.map((feature) => (
+                <div key={feature} className="flex items-start gap-3">
+                  <Check className="w-4 h-4 text-violet-200 mt-0.5 flex-shrink-0" />
+                  <span className="text-violet-100 text-sm">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            <Button asChild variant="secondary" className="w-full bg-white text-violet-700 hover:bg-violet-50 text-base font-bold py-4">
+              <Link href="/pricing">Start Building for $20/month →</Link>
+            </Button>
+          </div>
         </div>
 
-        {/* Guarantee strip */}
+        {/* Project types grid */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 mb-12">
+          <h3 className="font-bold text-slate-900 text-center text-lg mb-6">All project types — no extra charges</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {[
+              { icon: "🌐", label: "Business Website" },
+              { icon: "🎯", label: "Landing Page" },
+              { icon: "🛒", label: "Online Store" },
+              { icon: "✍️", label: "Blog" },
+              { icon: "🎨", label: "Portfolio" },
+              { icon: "⚡", label: "SaaS / App" },
+            ].map(({ icon, label }) => (
+              <div key={label} className="flex flex-col items-center text-center p-3 rounded-xl bg-slate-50">
+                <span className="text-2xl mb-1.5">{icon}</span>
+                <span className="text-slate-700 text-xs font-medium">{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Guarantee */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left mb-16">
           <div className="text-4xl">🛡️</div>
           <div className="flex-1">
             <div className="font-bold text-slate-900">30-Day Money-Back Guarantee</div>
-            <div className="text-slate-500 text-sm">
-              Not satisfied? Full refund within 30 days — no questions, no hassle.
-            </div>
+            <div className="text-slate-500 text-sm">Not satisfied in your first 30 days? Full refund — no questions, no hassle.</div>
           </div>
           <div className="flex flex-wrap justify-center sm:justify-end gap-4 text-sm text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <span>🔒</span> Stripe-secured
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span>⚡</span> Instant start
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span>💬</span> Support included
-            </div>
+            <div className="flex items-center gap-1.5"><span>🔒</span> Stripe-secured</div>
+            <div className="flex items-center gap-1.5"><span>⚡</span> Instant access</div>
+            <div className="flex items-center gap-1.5"><span>❌</span> Cancel anytime</div>
           </div>
         </div>
 
         {/* FAQ */}
         <div className="max-w-3xl mx-auto">
-          <h3 className="text-2xl font-black text-slate-900 text-center mb-8">
-            Questions? We've got answers.
-          </h3>
+          <h3 className="text-2xl font-black text-slate-900 text-center mb-8">Questions? We've got answers.</h3>
           <div className="space-y-3">
             {FAQS.map((faq) => (
               <FAQItem key={faq.q} q={faq.q} a={faq.a} />
@@ -180,9 +144,7 @@ export function PricingSection() {
           </div>
           <p className="text-center text-slate-400 text-sm mt-8">
             Still have questions?{" "}
-            <a href="/#contact" className="text-violet-600 hover:underline font-medium">
-              Ask us directly →
-            </a>
+            <a href="/#contact" className="text-violet-600 hover:underline font-medium">Ask us directly →</a>
           </p>
         </div>
       </div>

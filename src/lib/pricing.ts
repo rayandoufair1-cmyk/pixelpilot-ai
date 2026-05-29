@@ -1,58 +1,42 @@
-import type { PricingPlan } from "@/types";
+import type { SubscriptionPlan } from "@/types";
 
-export const PRICING_PLANS: PricingPlan[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: 997,
-    description: "Perfect for small businesses and solopreneurs",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || "price_starter",
-    features: [
-      "AI-generated 5-section website",
-      "Mobile responsive design",
-      "Contact form integration",
-      "Basic SEO optimization",
-      "1 revision round",
-      "Delivered in 24 hours",
-      "1 month support",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: 2497,
-    description: "For growing businesses that need more",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "price_pro",
-    popular: true,
-    features: [
-      "AI-generated 10-section website",
-      "Custom animations & interactions",
-      "Blog & CMS integration",
-      "Advanced SEO + sitemap",
-      "3 revision rounds",
-      "Delivered in 48 hours",
-      "3 months support",
-      "Analytics setup",
-      "Lead capture automation",
-    ],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: 5997,
-    description: "Full-scale solution for serious brands",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_ENTERPRISE_PRICE_ID || "price_enterprise",
-    features: [
-      "AI-generated full website (unlimited sections)",
-      "Custom design system",
-      "E-commerce integration",
-      "Multi-language support",
-      "Unlimited revisions",
-      "Delivered in 72 hours",
-      "6 months support",
-      "Performance optimization",
-      "A/B testing setup",
-      "Priority AI generation",
-    ],
-  },
-];
+export const SUBSCRIPTION_PLAN: SubscriptionPlan = {
+  id: "all-access",
+  name: "All Access",
+  price: 20,
+  priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || "",
+  description: "Unlimited AI-powered projects, every month",
+  badge: "Cancel anytime",
+  features: [
+    "Unlimited projects — no caps, ever",
+    "All project types: websites, stores, landing pages, blogs, portfolios",
+    "Full AI generation: design + code + copy",
+    "Mobile-responsive & SEO-optimized by default",
+    "Unlimited revisions",
+    "Priority AI generation queue",
+    "Deployed on global CDN (Vercel)",
+    "Email & chat support",
+    "Cancel anytime — no lock-in",
+  ],
+};
+
+/** Alias kept for components that haven't migrated yet */
+export const PRICING_PLANS = [SUBSCRIPTION_PLAN];
+
+export const PROJECT_TYPE_LABELS: Record<string, string> = {
+  website: "Business Website",
+  landing: "Landing Page",
+  ecommerce: "Online Store",
+  blog: "Blog",
+  portfolio: "Portfolio",
+  saas: "SaaS Landing Page",
+};
+
+export const PROJECT_TYPE_ICONS: Record<string, string> = {
+  website: "🌐",
+  landing: "🎯",
+  ecommerce: "🛒",
+  blog: "✍️",
+  portfolio: "🎨",
+  saas: "⚡",
+};

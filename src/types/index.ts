@@ -6,7 +6,23 @@ export type ProjectStatus =
   | "deploying"
   | "live";
 
-export type PricingTier = "starter" | "pro" | "enterprise";
+export type ProjectType =
+  | "website"
+  | "landing"
+  | "ecommerce"
+  | "blog"
+  | "portfolio"
+  | "saas";
+
+export type SubscriptionStatus =
+  | "active"
+  | "trialing"
+  | "past_due"
+  | "canceled"
+  | "inactive";
+
+// Legacy — kept so old DB rows don't break reads
+export type PricingTier = "starter" | "pro" | "enterprise" | "subscription";
 
 export interface Client {
   id: string;
@@ -16,6 +32,9 @@ export interface Client {
   phone?: string;
   user_id?: string;
   stripe_customer_id?: string;
+  subscription_id?: string;
+  subscription_status?: SubscriptionStatus;
+  subscription_period_end?: string;
   created_at: string;
 }
 
@@ -24,12 +43,13 @@ export interface Project {
   client_id: string;
   name: string;
   status: ProjectStatus;
-  tier: PricingTier;
+  project_type?: ProjectType;
+  /** Legacy column — still present on old rows */
+  tier?: PricingTier;
   intake_data: IntakeData;
   generated_code?: string;
   preview_url?: string;
   live_url?: string;
-  stripe_payment_intent_id?: string;
   stripe_session_id?: string;
   paid_at?: string;
   created_at: string;
@@ -45,6 +65,7 @@ export interface IntakeData {
   style: "modern" | "classic" | "minimal" | "bold" | "playful";
   pages: string[];
   features: string[];
+  project_type?: string;
   competitors?: string;
   logo_url?: string;
   brand_colors?: string[];
@@ -58,8 +79,19 @@ export interface Message {
   created_at: string;
 }
 
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  priceId: string;
+  description: string;
+  features: string[];
+  badge?: string;
+}
+
+/** @deprecated Use SubscriptionPlan */
 export interface PricingPlan {
-  id: PricingTier;
+  id: string;
   name: string;
   price: number;
   description: string;
