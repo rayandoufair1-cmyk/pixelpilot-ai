@@ -4,6 +4,18 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 
+// ─── Create client at MODULE level (not inside useEffect) ────────────────────
+// createBrowserClient auto-detects ?code= or #access_token= in the URL the
+// moment it is initialised. If we create it inside useEffect, initialisation
+// happens AFTER the component mounts — the PASSWORD_RECOVERY event can fire
+// before the listener is registered and we miss it. Module-level init runs
+// before any render, so the exchange starts immediately and the event is
+// always caught by the listener set up in useEffect.
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -14,47 +26,41 @@ export default function ResetPasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    // ── Method 1: Parse #access_token from URL hash (implicit flow) ──────────
-    // Supabase embeds the token directly in the hash when flowType=implicit.
-    // This is the most reliable method — no async event timing issues.
+    // ── Path A: implicit flow → #access_token=...&type=recovery in hash ──────
     const hash = window.location.hash.slice(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token") ?? "";
-    const type = params.get("type");
+    const hp = new URLSearchParams(hash);
+    const accessToken = hp.get("access_token");
+    const refreshToken = hp.get("refresh_token") ?? "";
+    const hashType = hp.get("type");
 
-    if (accessToken && type === "recovery") {
+    if (accessToken && hashType === "recovery") {
       supabase.auth
         .setSession({ access_token: accessToken, refresh_token: refreshToken })
-        .then(({ error: sessionError }) => {
-          if (sessionError) {
-            setError("This reset link has expired. Please request a new one.");
+        .then(({ error: e }) => {
+          if (e) {
+            setError("This link has expired. Please request a new one.");
           } else {
             setSessionReady(true);
-            // Remove token from URL bar so it can't be accidentally reused
+            // Remove token from address bar so it can't be reused on reload
             window.history.replaceState(null, "", window.location.pathname);
           }
           setChecking(false);
         });
-      return; // don't set up the listener — hash was the source of truth
+      return;
     }
 
-    // ── Method 2: onAuthStateChange (hash already consumed on prior load) ────
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-          setSessionReady(true);
-          setChecking(false);
-        }
+    // ── Path B: PKCE flow → createBrowserClient already started exchanging ───
+    // ?code= was detected at module-init time. Listen for the result.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+        setSessionReady(true);
+        setChecking(false);
       }
-    );
+    });
 
-    // ── Method 3: Existing session fallback ──────────────────────────────────
+    // ── Path C: session already established (page reload after prior link) ───
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true);
@@ -62,8 +68,8 @@ export default function ResetPasswordPage() {
       }
     });
 
-    // After 5 s with no session → show "link expired"
-    const timeout = setTimeout(() => setChecking(false), 5000);
+    // Show "expired" if none of the above fires within 6 seconds
+    const timeout = setTimeout(() => setChecking(false), 6000);
 
     return () => {
       subscription.unsubscribe();
@@ -85,11 +91,6 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true);
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
       setError(updateError.message);
@@ -102,7 +103,6 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-black text-slate-900">
             ✦ PixelPilot <span className="text-violet-600">AI</span>
@@ -110,7 +110,7 @@ export default function ResetPasswordPage() {
           <h1 className="text-xl font-bold text-slate-800 mt-4">Set a new password</h1>
         </div>
 
-        {/* Verifying */}
+        {/* Checking */}
         {checking && (
           <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-sm text-center">
             <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
